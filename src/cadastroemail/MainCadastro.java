@@ -5,6 +5,10 @@
  */
 package cadastroemail;
 
+import java.sql.ResultSet;
+import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
+import javax.swing.ListModel;
 /**
  *
  * @author ariel
@@ -14,8 +18,79 @@ public class MainCadastro extends javax.swing.JFrame {
     /**
      * Creates new form MainCadastro
      */
+    private CadastroEmail db = new CadastroEmail();
+    
+    private ResultSet resultSet;
+    private String Categoria = "TODOS", Pessoa;
+    //private int qtdCategoria, qtdPessoa; Variáveis não serão mais utilizadas
+    
     public MainCadastro() {
         initComponents();
+        
+        
+        db.SetConexao();
+        ExibirCategorias();
+        ExibirPessoas();
+        ExibirBotoes(false);
+        
+        /*TODO List:
+        * Necessário pensar em uma maneira de mostrar apenas as pessoas que sejam
+        * da categoria selecionada;
+        */
+       
+    }
+    
+    private void ExibirCategorias(){
+        try {
+            DefaultListModel model = new DefaultListModel();
+            model.addElement("TODOS");
+            resultSet = db.GetCategoriasRS();
+            do {                
+                model.addElement(resultSet.getString(1));
+            } while (resultSet.next());
+            
+            lst_categorias.setModel(model);
+            lst_categorias.setSelectedIndex(0);
+        } catch (Exception e) {
+            ExceptionShow(e);
+        }
+        
+    }
+    
+    private void ExibirPessoas(){
+        try {
+            DefaultListModel model = new DefaultListModel();
+            resultSet = db.GetPessoasRS();
+            do {                
+                model.addElement(resultSet.getString(1));
+            } while (resultSet.next());
+            
+            lst_nomes.setModel(model);
+        } catch (Exception e) {
+            ExceptionShow(e);
+        }
+    }
+    
+    private void ExibirBotoes(boolean visivel){
+        lbl_titulo.setVisible(visivel);
+        lbl_campo1.setVisible(visivel);
+        lbl_campo2.setVisible(visivel);
+        lbl_campo3.setVisible(visivel);
+        
+        txt_campo1.setVisible(visivel);
+        cmb_combo1.setVisible(visivel);
+        cmb_combo2.setVisible(visivel);
+        
+        jSeparator1.setVisible(visivel);
+        jSeparator2.setVisible(visivel);
+        jSeparator3.setVisible(visivel);
+        
+        btn_editar.setVisible(visivel);
+        btn_remover.setVisible(visivel);
+    }
+    
+    private void ExceptionShow(Exception e){
+        JOptionPane.showMessageDialog(this, "Erro: " + e.toString(), "Erro", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -29,12 +104,21 @@ public class MainCadastro extends javax.swing.JFrame {
 
         panelTop = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        btn_adicionarPessoa = new javax.swing.JButton();
+        btn_adicionarCategoria = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         lbl_titulo = new javax.swing.JLabel();
         txt_campo1 = new javax.swing.JTextField();
         lbl_campo1 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
+        lbl_campo2 = new javax.swing.JLabel();
+        jSeparator2 = new javax.swing.JSeparator();
+        cmb_combo1 = new javax.swing.JComboBox<>();
+        lbl_campo3 = new javax.swing.JLabel();
+        cmb_combo2 = new javax.swing.JComboBox<>();
+        jSeparator3 = new javax.swing.JSeparator();
+        btn_editar = new javax.swing.JButton();
+        btn_remover = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         lst_categorias = new javax.swing.JList<>();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -47,7 +131,19 @@ public class MainCadastro extends javax.swing.JFrame {
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-contacts-48.png"))); // NOI18N
         jLabel1.setText("Contatos");
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-add-user-group-woman-man-48.png"))); // NOI18N
+        btn_adicionarPessoa.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-add-user-group-woman-man-48.png"))); // NOI18N
+        btn_adicionarPessoa.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_adicionarPessoaActionPerformed(evt);
+            }
+        });
+
+        btn_adicionarCategoria.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-add-tag-48.png"))); // NOI18N
+        btn_adicionarCategoria.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_adicionarCategoriaActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelTopLayout = new javax.swing.GroupLayout(panelTop);
         panelTop.setLayout(panelTopLayout);
@@ -57,7 +153,9 @@ public class MainCadastro extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btn_adicionarPessoa, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn_adicionarCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         panelTopLayout.setVerticalGroup(
@@ -65,9 +163,11 @@ public class MainCadastro extends javax.swing.JFrame {
             .addGroup(panelTopLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(panelTopLayout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addGroup(panelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btn_adicionarCategoria)
+                            .addComponent(btn_adicionarPessoa))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -76,25 +176,60 @@ public class MainCadastro extends javax.swing.JFrame {
 
         lbl_titulo.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
         lbl_titulo.setText("jLabel2");
+        lbl_titulo.setOpaque(true);
 
         lbl_campo1.setText("Nome");
+        lbl_campo1.setOpaque(true);
+
+        lbl_campo2.setText("Nome");
+        lbl_campo2.setOpaque(true);
+
+        cmb_combo1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        lbl_campo3.setText("Nome");
+        lbl_campo3.setOpaque(true);
+
+        cmb_combo2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        btn_editar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-edit-48.png"))); // NOI18N
+        btn_editar.setText("Editar");
+
+        btn_remover.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-clear-symbol-48.png"))); // NOI18N
+        btn_remover.setText("Remover");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSeparator1)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                        .addGap(4, 4, 4)
-                        .addComponent(lbl_campo1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txt_campo1))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lbl_titulo)
-                        .addGap(0, 242, Short.MAX_VALUE)))
+                        .addGap(0, 242, Short.MAX_VALUE))
+                    .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(4, 4, 4)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lbl_campo1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txt_campo1))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lbl_campo2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmb_combo1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lbl_campo3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmb_combo2, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btn_editar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btn_remover)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -108,20 +243,42 @@ public class MainCadastro extends javax.swing.JFrame {
                     .addComponent(lbl_campo1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lbl_campo2)
+                    .addComponent(cmb_combo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(11, 11, 11)
+                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lbl_campo3)
+                    .addComponent(cmb_combo2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(11, 11, 11)
+                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_editar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(281, 281, 281))
         );
 
         lst_categorias.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            String[] strings = { "TODOS" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
+        lst_categorias.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        lst_categorias.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lst_categoriasValueChanged(evt);
+            }
+        });
         jScrollPane2.setViewportView(lst_categorias);
 
-        lst_nomes.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+        lst_nomes.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lst_nomesValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(lst_nomes);
 
@@ -142,15 +299,46 @@ public class MainCadastro extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(panelTop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 463, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2)))
+                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane2)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    //Adicionar Categoria
+    
+    //Inicialmente era utilizado um formulário separado para receber o novo nome, agora é utilizado o valor digitado pelo usuário emum JOptionPane 
+    private void btn_adicionarCategoriaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_adicionarCategoriaActionPerformed
+        //Adicionar adicionar = new Adicionar(1);
+        //adicionar.setVisible(true);
+        String valor = JOptionPane.showInputDialog(this,"Adicionar", DISPOSE_ON_CLOSE);
+        db.AdicionarCategoria(valor);
+        ExibirCategorias();
+    }//GEN-LAST:event_btn_adicionarCategoriaActionPerformed
+
+    private void btn_adicionarPessoaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_adicionarPessoaActionPerformed
+        //Adicionar adicionar = new Adicionar(2);
+        //adicionar.setVisible(true);
+        String valor = JOptionPane.showInputDialog(this,"Adicionar", DISPOSE_ON_CLOSE);
+        db.AdicionarPessoa(valor);
+        ExibirPessoas();
+    }//GEN-LAST:event_btn_adicionarPessoaActionPerformed
+
+    private void lst_nomesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lst_nomesValueChanged
+        Pessoa = lst_nomes.getSelectedValue();
+    }//GEN-LAST:event_lst_nomesValueChanged
+
+    private void lst_categoriasValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lst_categoriasValueChanged
+        Categoria = lst_categorias.getSelectedValue();
+        db.SetCategoria(Categoria);
+        ExibirPessoas();
+    }//GEN-LAST:event_lst_categoriasValueChanged
 
     /**
      * @param args the command line arguments
@@ -188,13 +376,22 @@ public class MainCadastro extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton btn_adicionarCategoria;
+    private javax.swing.JButton btn_adicionarPessoa;
+    private javax.swing.JButton btn_editar;
+    private javax.swing.JButton btn_remover;
+    private javax.swing.JComboBox<String> cmb_combo1;
+    private javax.swing.JComboBox<String> cmb_combo2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
     private javax.swing.JLabel lbl_campo1;
+    private javax.swing.JLabel lbl_campo2;
+    private javax.swing.JLabel lbl_campo3;
     private javax.swing.JLabel lbl_titulo;
     private javax.swing.JList<String> lst_categorias;
     private javax.swing.JList<String> lst_nomes;
