@@ -6,9 +6,14 @@
 package cadastroemail;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Convert;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 import javax.swing.ListModel;
+import javax.swing.event.ListDataListener;
 /**
  *
  * @author ariel
@@ -22,6 +27,10 @@ public class MainCadastro extends javax.swing.JFrame {
     
     private ResultSet resultSet;
     private String Categoria = "TODOS", Pessoa;
+    private List<Integer> IDS = new ArrayList();
+    DefaultListModel modelCategoria = new DefaultListModel();
+    DefaultListModel modelPessoa = new DefaultListModel();
+    ComboBoxModel<String> modelCategoriaComboBox;
     //private int qtdCategoria, qtdPessoa; Variáveis não serão mais utilizadas
     
     public MainCadastro() {
@@ -29,27 +38,37 @@ public class MainCadastro extends javax.swing.JFrame {
         
         
         db.SetConexao();
+        db.SetCategoria(Categoria);
+        
         ExibirCategorias();
-        ExibirPessoas();
+        //ExibirPessoas();
         ExibirBotoes(false);
         
         /*TODO List:
         * Necessário pensar em uma maneira de mostrar apenas as pessoas que sejam
         * da categoria selecionada;
+        * SELECT p.nome from pessoa as p, email as e, categoria as c WHERE p.id = e.idPessoa and c.id = e.idCategoria and c.descricao = ?
+        *
+        * #### OK ####
+        *
+        * Ainda é preciso editar os valores dos contados e removê-los
+        * Verificar se Categoria não é nula antes de inserir
         */
        
     }
     
     private void ExibirCategorias(){
         try {
-            DefaultListModel model = new DefaultListModel();
-            model.addElement("TODOS");
+            modelCategoria.addElement("TODOS");
             resultSet = db.GetCategoriasRS();
+            cmb_descricao.removeAllItems();
+            cmb_descricao.addItem("");
             do {                
-                model.addElement(resultSet.getString(1));
+                modelCategoria.addElement(resultSet.getString(1));
+                cmb_descricao.addItem(resultSet.getString(1));
             } while (resultSet.next());
             
-            lst_categorias.setModel(model);
+            lst_categorias.setModel(modelCategoria);
             lst_categorias.setSelectedIndex(0);
         } catch (Exception e) {
             ExceptionShow(e);
@@ -59,27 +78,32 @@ public class MainCadastro extends javax.swing.JFrame {
     
     private void ExibirPessoas(){
         try {
-            DefaultListModel model = new DefaultListModel();
             resultSet = db.GetPessoasRS();
-            do {                
-                model.addElement(resultSet.getString(1));
-            } while (resultSet.next());
+            if (resultSet == null){
+                lst_nomes.removeAll();
+                MessageShow("Categoria vazia!");
+            } else{
+                do {                
+                    modelPessoa.addElement(resultSet.getString(1));
+                    IDS.add(resultSet.getInt(2));
+                } while (resultSet.next());
+            }
             
-            lst_nomes.setModel(model);
+            
+            lst_nomes.setModel(modelPessoa);
         } catch (Exception e) {
             ExceptionShow(e);
         }
     }
     
     private void ExibirBotoes(boolean visivel){
-        lbl_titulo.setVisible(visivel);
         lbl_campo1.setVisible(visivel);
         lbl_campo2.setVisible(visivel);
         lbl_campo3.setVisible(visivel);
         
-        txt_campo1.setVisible(visivel);
-        cmb_combo1.setVisible(visivel);
-        cmb_combo2.setVisible(visivel);
+        txt_nome.setVisible(visivel);
+        cmb_descricao.setVisible(visivel);
+        txt_email.setVisible(visivel);
         
         jSeparator1.setVisible(visivel);
         jSeparator2.setVisible(visivel);
@@ -89,8 +113,13 @@ public class MainCadastro extends javax.swing.JFrame {
         btn_remover.setVisible(visivel);
     }
     
+    
     private void ExceptionShow(Exception e){
         JOptionPane.showMessageDialog(this, "Erro: " + e.toString(), "Erro", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    private void MessageShow(String text){
+        JOptionPane.showMessageDialog(this, text, "Mensagem", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -107,18 +136,17 @@ public class MainCadastro extends javax.swing.JFrame {
         btn_adicionarPessoa = new javax.swing.JButton();
         btn_adicionarCategoria = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
-        lbl_titulo = new javax.swing.JLabel();
-        txt_campo1 = new javax.swing.JTextField();
+        txt_nome = new javax.swing.JTextField();
         lbl_campo1 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         lbl_campo2 = new javax.swing.JLabel();
         jSeparator2 = new javax.swing.JSeparator();
-        cmb_combo1 = new javax.swing.JComboBox<>();
+        cmb_descricao = new javax.swing.JComboBox<>();
         lbl_campo3 = new javax.swing.JLabel();
-        cmb_combo2 = new javax.swing.JComboBox<>();
         jSeparator3 = new javax.swing.JSeparator();
         btn_editar = new javax.swing.JButton();
         btn_remover = new javax.swing.JButton();
+        txt_email = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         lst_categorias = new javax.swing.JList<>();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -174,22 +202,14 @@ public class MainCadastro extends javax.swing.JFrame {
 
         jPanel1.setAutoscrolls(true);
 
-        lbl_titulo.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
-        lbl_titulo.setText("jLabel2");
-        lbl_titulo.setOpaque(true);
-
         lbl_campo1.setText("Nome");
         lbl_campo1.setOpaque(true);
 
-        lbl_campo2.setText("Nome");
+        lbl_campo2.setText("Categoria");
         lbl_campo2.setOpaque(true);
 
-        cmb_combo1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        lbl_campo3.setText("Nome");
+        lbl_campo3.setText("E-Mail");
         lbl_campo3.setOpaque(true);
-
-        cmb_combo2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         btn_editar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-edit-48.png"))); // NOI18N
         btn_editar.setText("Editar");
@@ -202,33 +222,29 @@ public class MainCadastro extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(lbl_titulo)
-                        .addGap(0, 242, Short.MAX_VALUE))
-                    .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(4, 4, 4)
+                        .addContainerGap()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(lbl_campo1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txt_campo1))
+                            .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(lbl_campo2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmb_combo1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(cmb_descricao, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(lbl_campo3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmb_combo2, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
+                                .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lbl_campo1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(89, 89, 89)
                         .addComponent(btn_editar)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btn_remover)))
                 .addContainerGap())
         );
@@ -236,30 +252,28 @@ public class MainCadastro extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(lbl_titulo)
-                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txt_campo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lbl_campo1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(lbl_campo1)
+                    .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lbl_campo2)
-                    .addComponent(cmb_combo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(11, 11, 11)
+                    .addComponent(cmb_descricao, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lbl_campo3)
-                    .addComponent(cmb_combo2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(11, 11, 11)
+                    .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(19, 19, 19)
                 .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_editar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(281, 281, 281))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btn_editar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(329, 329, 329))
         );
 
         lst_categorias.setModel(new javax.swing.AbstractListModel<String>() {
@@ -275,6 +289,7 @@ public class MainCadastro extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(lst_categorias);
 
+        lst_nomes.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         lst_nomes.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 lst_nomesValueChanged(evt);
@@ -332,9 +347,24 @@ public class MainCadastro extends javax.swing.JFrame {
 
     private void lst_nomesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lst_nomesValueChanged
         Pessoa = lst_nomes.getSelectedValue();
+        int id = IDS.get(lst_nomes.getSelectedIndex());
+        db.SetID(id);
+        
+        try {
+            String nome = db.GetNomeString();
+            txt_nome.setText(nome); 
+            //modelCategoriaComboBox = (ComboBoxModel<String>) modelCategoria;
+            //cmb_descricao.setModel(modelCategoriaComboBox);
+            txt_email.setText(db.GetEmailString());
+            ExibirBotoes(true);
+        } catch (Exception e) {
+            ExceptionShow(e);
+            ExibirBotoes(false);
+        }        
     }//GEN-LAST:event_lst_nomesValueChanged
 
     private void lst_categoriasValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lst_categoriasValueChanged
+        ExibirBotoes(false);
         Categoria = lst_categorias.getSelectedValue();
         db.SetCategoria(Categoria);
         ExibirPessoas();
@@ -380,8 +410,7 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JButton btn_adicionarPessoa;
     private javax.swing.JButton btn_editar;
     private javax.swing.JButton btn_remover;
-    private javax.swing.JComboBox<String> cmb_combo1;
-    private javax.swing.JComboBox<String> cmb_combo2;
+    private javax.swing.JComboBox<String> cmb_descricao;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -392,10 +421,10 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JLabel lbl_campo1;
     private javax.swing.JLabel lbl_campo2;
     private javax.swing.JLabel lbl_campo3;
-    private javax.swing.JLabel lbl_titulo;
     private javax.swing.JList<String> lst_categorias;
     private javax.swing.JList<String> lst_nomes;
     private javax.swing.JPanel panelTop;
-    private javax.swing.JTextField txt_campo1;
+    private javax.swing.JTextField txt_email;
+    private javax.swing.JTextField txt_nome;
     // End of variables declaration//GEN-END:variables
 }
