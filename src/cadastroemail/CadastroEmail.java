@@ -27,6 +27,7 @@ public class CadastroEmail {
     private ResultSet rs, rsValores;
     private Statement st;
     private String msgErro, sqlString, Categoria;
+    private int ID;
     
     //Variáveis da classe
     
@@ -51,7 +52,7 @@ public class CadastroEmail {
     
     public ResultSet GetCategoriasRS(){
         try{
-            sqlString = "SELECT descricao FROM categoria";
+            sqlString = "SELECT descricao FROM categoria ORDER BY descricao";
             st = con.prepareStatement(sqlString);
             rs = st.executeQuery(sqlString);
             rs.first();
@@ -76,9 +77,18 @@ public class CadastroEmail {
     
     public ResultSet GetPessoasRS(){
         try{
-            sqlString = "SELECT nome FROM pessoa";
-            st = con.prepareStatement(sqlString);
-            rs = st.executeQuery(sqlString);
+            //sqlString = "SELECT nome FROM pessoa";
+            if ("TODOS".equals(Categoria)){
+                sqlString = "SELECT nome, id FROM pessoa ORDER BY nome";
+                st = con.prepareStatement(sqlString);
+                rs = st.executeQuery(sqlString);
+            }else{
+                sqlString = "SELECT p.nome, p.id from pessoa as p, email as e, categoria as c WHERE p.id = e.idPessoa and c.id = e.idCategoria and c.descricao = ? ORDER BY p.nome";
+                ps = con.prepareStatement(sqlString);
+                ps.setString(1,Categoria);
+                rs = ps.executeQuery(sqlString);
+            }
+            
             rs.first();
         } catch(Exception e){
             rs = null;
@@ -125,8 +135,52 @@ public class CadastroEmail {
         }
     }
     
+//    public ResultSet CadastroPessoa(){
+//        try{
+//            sqlString = "SELECT p.nome, c.descricao, e.email FROM pessoa as p, categoria as c, email as e WHERE p.id = e.idPessoa AND c.id = e.idCategoria AND p.id = ?";
+//            ps = con.prepareStatement(sqlString);
+//            ps.setInt(1, ID);
+//            rs = ps.executeQuery();
+//            rs.first();
+//        } catch (Exception e){
+//            rs = null;
+//        }
+//        return  rs;
+//    }
+    
+    public String GetNomeString(){
+        try {
+            sqlString = "SELECT nome FROM pessoa WHERE id = ?";
+            ps  = con.prepareStatement(sqlString);
+            ps.setInt(1, ID);
+            rs = ps.executeQuery();
+            rs.first();
+            return rs.getString(1);
+            
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    public String GetEmailString(){
+        try {
+            sqlString = "SELECT email FROM email WHERE idPessoa = ?";
+            ps = con.prepareStatement(sqlString);
+            ps.setInt(1, ID);
+            rs = ps.executeQuery();
+            rs.first();
+            return rs.getString(1);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
     public void SetCategoria(String Categoria){
         this.Categoria = Categoria;
+    }
+    
+    public void SetID(int ID){
+        this.ID = ID;
     }
     
     
