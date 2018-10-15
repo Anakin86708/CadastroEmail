@@ -8,12 +8,9 @@ package cadastroemail;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Convert;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
-import javax.swing.ListModel;
-import javax.swing.event.ListDataListener;
 /**
  *
  * @author ariel
@@ -27,7 +24,11 @@ public class MainCadastro extends javax.swing.JFrame {
     
     private ResultSet resultSet;
     private String Categoria = "TODOS", Pessoa;
-    private List<Integer> IDS = new ArrayList();
+    private List<Integer> IdPessoa = new ArrayList();
+    private List<Integer> IdCategoria = new ArrayList();
+    private int IdCategoriaInt;
+    
+    //Models
     DefaultListModel modelCategoria = new DefaultListModel();
     DefaultListModel modelPessoa = new DefaultListModel();
     ComboBoxModel<String> modelCategoriaComboBox;
@@ -51,14 +52,17 @@ public class MainCadastro extends javax.swing.JFrame {
         *
         * #### OK ####
         *
-        * Ainda é preciso editar os valores dos contados e removê-los
+        * Ainda é preciso editar os valores dos contatos e removê-los
         * Verificar se Categoria não é nula antes de inserir
+        * 
+        * Mostrar pessoas com mais de um email, mesmo que em mesma categoria - talvez utilizando JOIN
         */
        
     }
     
     private void ExibirCategorias(){
         try {
+            lst_categorias.removeAll();
             modelCategoria.addElement("TODOS");
             resultSet = db.GetCategoriasRS();
             cmb_descricao.removeAllItems();
@@ -66,10 +70,10 @@ public class MainCadastro extends javax.swing.JFrame {
             do {                
                 modelCategoria.addElement(resultSet.getString(1));
                 cmb_descricao.addItem(resultSet.getString(1));
+                IdCategoria.add(resultSet.getInt(2));
             } while (resultSet.next());
             
             lst_categorias.setModel(modelCategoria);
-            lst_categorias.setSelectedIndex(0);
         } catch (Exception e) {
             ExceptionShow(e);
         }
@@ -78,17 +82,17 @@ public class MainCadastro extends javax.swing.JFrame {
     
     private void ExibirPessoas(){
         try {
+            modelPessoa.removeAllElements();
             resultSet = db.GetPessoasRS();
             if (resultSet == null){
-                lst_nomes.removeAll();
                 MessageShow("Categoria vazia!");
             } else{
+                lst_nomes.removeAll();
                 do {                
                     modelPessoa.addElement(resultSet.getString(1));
-                    IDS.add(resultSet.getInt(2));
+                    IdPessoa.add(resultSet.getInt(2));
                 } while (resultSet.next());
             }
-            
             
             lst_nomes.setModel(modelPessoa);
         } catch (Exception e) {
@@ -109,7 +113,7 @@ public class MainCadastro extends javax.swing.JFrame {
         jSeparator2.setVisible(visivel);
         jSeparator3.setVisible(visivel);
         
-        btn_editar.setVisible(visivel);
+        btn_gravar.setVisible(visivel);
         btn_remover.setVisible(visivel);
     }
     
@@ -144,7 +148,7 @@ public class MainCadastro extends javax.swing.JFrame {
         cmb_descricao = new javax.swing.JComboBox<>();
         lbl_campo3 = new javax.swing.JLabel();
         jSeparator3 = new javax.swing.JSeparator();
-        btn_editar = new javax.swing.JButton();
+        btn_gravar = new javax.swing.JButton();
         btn_remover = new javax.swing.JButton();
         txt_email = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -211,8 +215,13 @@ public class MainCadastro extends javax.swing.JFrame {
         lbl_campo3.setText("E-Mail");
         lbl_campo3.setOpaque(true);
 
-        btn_editar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-edit-48.png"))); // NOI18N
-        btn_editar.setText("Editar");
+        btn_gravar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-edit-48.png"))); // NOI18N
+        btn_gravar.setText("Gravar");
+        btn_gravar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_gravarActionPerformed(evt);
+            }
+        });
 
         btn_remover.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-clear-symbol-48.png"))); // NOI18N
         btn_remover.setText("Remover");
@@ -243,7 +252,7 @@ public class MainCadastro extends javax.swing.JFrame {
                                 .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(89, 89, 89)
-                        .addComponent(btn_editar)
+                        .addComponent(btn_gravar)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btn_remover)))
                 .addContainerGap())
@@ -271,7 +280,7 @@ public class MainCadastro extends javax.swing.JFrame {
                 .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btn_editar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_gravar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(329, 329, 329))
         );
@@ -346,8 +355,9 @@ public class MainCadastro extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_adicionarPessoaActionPerformed
 
     private void lst_nomesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lst_nomesValueChanged
-        Pessoa = lst_nomes.getSelectedValue();
-        int id = IDS.get(lst_nomes.getSelectedIndex());
+        //Pessoa = lst_nomes.getSelectedValue();
+        int id = IdPessoa.get(lst_nomes.getSelectedIndex());
+        int index = db.GetCategoriaInteger();
         db.SetID(id);
         
         try {
@@ -355,6 +365,7 @@ public class MainCadastro extends javax.swing.JFrame {
             txt_nome.setText(nome); 
             //modelCategoriaComboBox = (ComboBoxModel<String>) modelCategoria;
             //cmb_descricao.setModel(modelCategoriaComboBox);
+            cmb_descricao.setSelectedIndex(index);
             txt_email.setText(db.GetEmailString());
             ExibirBotoes(true);
         } catch (Exception e) {
@@ -369,6 +380,15 @@ public class MainCadastro extends javax.swing.JFrame {
         db.SetCategoria(Categoria);
         ExibirPessoas();
     }//GEN-LAST:event_lst_categoriasValueChanged
+
+    private void btn_gravarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_gravarActionPerformed
+        db.SetNome(txt_nome.getText());
+        db.SetEmail(txt_email.getText());
+        IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex()-1); 
+        db.SetIDCategoria(IdCategoriaInt);
+        
+
+    }//GEN-LAST:event_btn_gravarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -408,7 +428,7 @@ public class MainCadastro extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_adicionarCategoria;
     private javax.swing.JButton btn_adicionarPessoa;
-    private javax.swing.JButton btn_editar;
+    private javax.swing.JButton btn_gravar;
     private javax.swing.JButton btn_remover;
     private javax.swing.JComboBox<String> cmb_descricao;
     private javax.swing.JLabel jLabel1;
