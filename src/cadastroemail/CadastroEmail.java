@@ -26,8 +26,8 @@ public class CadastroEmail {
     private PreparedStatement ps;
     private ResultSet rs, rsValores;
     private Statement st;
-    private String msgErro, sqlString, Categoria;
-    private int ID;
+    private String msgErro, sqlString, Categoria, Nome, Email;
+    private int ID, IDCategoria;
     
     //Variáveis da classe
     
@@ -52,7 +52,7 @@ public class CadastroEmail {
     
     public ResultSet GetCategoriasRS(){
         try{
-            sqlString = "SELECT descricao FROM categoria ORDER BY descricao";
+            sqlString = "SELECT descricao, id FROM categoria ORDER BY descricao";
             st = con.prepareStatement(sqlString);
             rs = st.executeQuery(sqlString);
             rs.first();
@@ -79,7 +79,9 @@ public class CadastroEmail {
         try{
             //sqlString = "SELECT nome FROM pessoa";
             if ("TODOS".equals(Categoria)){
-                sqlString = "SELECT nome, id FROM pessoa ORDER BY nome";
+                //sqlString = "SELECT nome, id FROM pessoa ORDER BY nome";
+                //Uso de JOIN para exibir pessoas que tenham email em outra categoria
+                sqlString = "SELECT p.nome, p.id from pessoa as p LEFT JOIN email as e ON p.id = e.idPessoa";
                 st = con.prepareStatement(sqlString);
                 rs = st.executeQuery(sqlString);
             }else{
@@ -175,12 +177,55 @@ public class CadastroEmail {
         }
     }
     
+    public Integer GetCategoriaInteger(){
+        try {
+            sqlString = "SELECT c.id FROM categoria as c, email as e WHERE c.id = e.idCategoria AND e.idPessoa = ?";
+            ps = con.prepareStatement(sqlString);
+            ps.setInt(1, ID);
+            rs = ps.executeQuery();
+            rs.first();
+            return rs.getInt(1);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+    
+//    public String EditarContato(Integer idCategoria){
+//        try {
+//            sqlString = "INSERT INTO email (idPessoa, idCategoria, email) VALUES (?,?,?)";
+//            ps = con.prepareStatement(sqlString);
+//            ps.setInt(1, ID);
+//            ps.setInt(2, idCategoria);
+//            ps.setString(3, Email);
+//            ps.executeUpdate();
+//            return "Sucesso!";
+//        } catch (Exception e) {
+//            return "Erro ao editar contato!" + e.getMessage();
+//        }
+//    }
+    
+    public String AlterarValorCadastro(){
+        
+    }
+    
     public void SetCategoria(String Categoria){
         this.Categoria = Categoria;
     }
     
     public void SetID(int ID){
         this.ID = ID;
+    }
+    
+    public void SetNome(String Nome){
+        this.Nome = Nome;
+    }
+    
+    public void SetEmail(String Email){
+        this.Email = Email;
+    }
+    
+    public void SetIDCategoria(int IDCategoria){
+        this.IDCategoria = IDCategoria;
     }
     
     
