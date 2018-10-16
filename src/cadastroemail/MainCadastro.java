@@ -6,11 +6,13 @@
 package cadastroemail;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
+import sun.security.rsa.RSACore;
 /**
  *
  * @author ariel
@@ -26,12 +28,16 @@ public class MainCadastro extends javax.swing.JFrame {
     private String Categoria = "TODOS", Pessoa;
     private List<Integer> IdPessoa = new ArrayList();
     private List<Integer> IdCategoria = new ArrayList();
+    private List<Integer> IdEmail = new ArrayList();
     private int IdCategoriaInt;
+    private boolean NovoValor;
     
     //Models
     DefaultListModel modelCategoria = new DefaultListModel();
     DefaultListModel modelPessoa = new DefaultListModel();
+    
     ComboBoxModel<String> modelCategoriaComboBox;
+    ComboBoxModel<String> modelEmailComboBox;
     //private int qtdCategoria, qtdPessoa; Variáveis não serão mais utilizadas
     
     public MainCadastro() {
@@ -44,6 +50,8 @@ public class MainCadastro extends javax.swing.JFrame {
         ExibirCategorias();
         //ExibirPessoas();
         ExibirBotoes(false);
+        cmb_email.setEditable(true);
+        //cmb_email.setSelectedIndex(0);
         
         /*TODO List:
         * Necessário pensar em uma maneira de mostrar apenas as pessoas que sejam
@@ -82,12 +90,12 @@ public class MainCadastro extends javax.swing.JFrame {
     
     private void ExibirPessoas(){
         try {
-            modelPessoa.removeAllElements();
             resultSet = db.GetPessoasRS();
             if (resultSet == null){
                 MessageShow("Categoria vazia!");
             } else{
                 lst_nomes.removeAll();
+                resultSet.first();
                 do {                
                     modelPessoa.addElement(resultSet.getString(1));
                     IdPessoa.add(resultSet.getInt(2));
@@ -95,7 +103,11 @@ public class MainCadastro extends javax.swing.JFrame {
             }
             
             lst_nomes.setModel(modelPessoa);
-        } catch (Exception e) {
+        }catch(ArrayIndexOutOfBoundsException e){
+            modelPessoa.add(0, "");
+            ExibirPessoas();
+        } 
+        catch (Exception e) {
             ExceptionShow(e);
         }
     }
@@ -107,7 +119,7 @@ public class MainCadastro extends javax.swing.JFrame {
         
         txt_nome.setVisible(visivel);
         cmb_descricao.setVisible(visivel);
-        txt_email.setVisible(visivel);
+        cmb_email.setVisible(visivel);
         
         jSeparator1.setVisible(visivel);
         jSeparator2.setVisible(visivel);
@@ -150,7 +162,7 @@ public class MainCadastro extends javax.swing.JFrame {
         jSeparator3 = new javax.swing.JSeparator();
         btn_gravar = new javax.swing.JButton();
         btn_remover = new javax.swing.JButton();
-        txt_email = new javax.swing.JTextField();
+        cmb_email = new javax.swing.JComboBox<>();
         jScrollPane2 = new javax.swing.JScrollPane();
         lst_categorias = new javax.swing.JList<>();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -225,35 +237,38 @@ public class MainCadastro extends javax.swing.JFrame {
 
         btn_remover.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/icons8-clear-symbol-48.png"))); // NOI18N
         btn_remover.setText("Remover");
+        btn_remover.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_removerActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(lbl_campo2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmb_descricao, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(lbl_campo3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
-                                .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(lbl_campo1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(lbl_campo2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmb_descricao, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(89, 89, 89)
-                        .addComponent(btn_gravar)
+                        .addComponent(lbl_campo3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cmb_email, javax.swing.GroupLayout.PREFERRED_SIZE, 264, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(lbl_campo1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
+                        .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btn_gravar)
+                        .addGap(18, 18, 18)
                         .addComponent(btn_remover)))
                 .addContainerGap())
         );
@@ -273,10 +288,10 @@ public class MainCadastro extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lbl_campo3)
-                    .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(19, 19, 19)
+                    .addComponent(cmb_email, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(12, 12, 12)
                 .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -366,9 +381,19 @@ public class MainCadastro extends javax.swing.JFrame {
             //modelCategoriaComboBox = (ComboBoxModel<String>) modelCategoria;
             //cmb_descricao.setModel(modelCategoriaComboBox);
             cmb_descricao.setSelectedIndex(index);
-            txt_email.setText(db.GetEmailString());
+            cmb_email.removeAllItems();
+            IdEmail.clear();
+            resultSet = db.GetEmailRS();
+            do {                
+                cmb_email.addItem(resultSet.getString(1));
+                IdEmail.add(resultSet.getInt(2));
+            } while (resultSet.next());
             ExibirBotoes(true);
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            ExibirBotoes(true);
+            cmb_email.removeAllItems();
+        }
+        catch (Exception e){
             ExceptionShow(e);
             ExibirBotoes(false);
         }        
@@ -378,17 +403,34 @@ public class MainCadastro extends javax.swing.JFrame {
         ExibirBotoes(false);
         Categoria = lst_categorias.getSelectedValue();
         db.SetCategoria(Categoria);
+        try {
+            modelPessoa.removeAllElements();
+        } catch (Exception e) {
+        }
         ExibirPessoas();
     }//GEN-LAST:event_lst_categoriasValueChanged
 
     private void btn_gravarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_gravarActionPerformed
         db.SetNome(txt_nome.getText());
-        db.SetEmail(txt_email.getText());
+        NovoValor = db.SetEmail(cmb_email.getSelectedItem().toString());
         IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex()-1); 
         db.SetIDCategoria(IdCategoriaInt);
-        
+        if (!NovoValor) {
+            int indexEmail = cmb_email.getSelectedIndex();
+            db.SetIDEmail(IdEmail.get(indexEmail));
+        }
+        String msg = db.AlterarValorCadastro();
+        MessageShow(msg);
 
     }//GEN-LAST:event_btn_gravarActionPerformed
+
+    private void btn_removerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_removerActionPerformed
+        if (JOptionPane.showConfirmDialog(this,"Deseja realmente remover este contato?", "Remover Permanentemente",DISPOSE_ON_CLOSE) == 0){
+            int indexEmail = cmb_email.getSelectedIndex();
+            db.SetIDEmail(IdEmail.get(indexEmail));
+            db.Remover();
+        }
+    }//GEN-LAST:event_btn_removerActionPerformed
 
     /**
      * @param args the command line arguments
@@ -431,6 +473,7 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JButton btn_gravar;
     private javax.swing.JButton btn_remover;
     private javax.swing.JComboBox<String> cmb_descricao;
+    private javax.swing.JComboBox<String> cmb_email;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -444,7 +487,6 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JList<String> lst_categorias;
     private javax.swing.JList<String> lst_nomes;
     private javax.swing.JPanel panelTop;
-    private javax.swing.JTextField txt_email;
     private javax.swing.JTextField txt_nome;
     // End of variables declaration//GEN-END:variables
 }
