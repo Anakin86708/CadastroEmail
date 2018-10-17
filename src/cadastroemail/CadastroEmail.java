@@ -26,13 +26,13 @@ public class CadastroEmail {
     private PreparedStatement ps;
     private ResultSet rs, rsValores, rsEmail;
     private Statement st;
-    private String msgErro, sqlString, Categoria, Nome, Email;
-    private int ID, IDCategoria, IDEmail;
+    private String sqlString, Categoria, Nome, Email;
+    private int IDPessoa, IDCategoria, IDEmail;
     private boolean NovoValor;
     
     //Variáveis da classe
     
-    public void SetConexao(){
+    public boolean SetConexao(){
         String driver, enderecoDB, userDB, senhaDB;
         driver = "com.mysql.jdbc.Driver"; //Não esquecer de adicionar biblioteca do Driver MySQL
         enderecoDB = "jdbc:mysql://localhost/contato";
@@ -42,9 +42,11 @@ public class CadastroEmail {
         try{
             Class.forName(driver);
             con = DriverManager.getConnection(enderecoDB, userDB, senhaDB);
-            msgErro = "Mensagem: Banco de Dados conectato com êxito!";
+            //msgErro = "Mensagem: Banco de Dados conectato com êxito!";
+            return true;
         } catch (Exception e){
-            msgErro = "Mensagem: Erro ao conectar com o Banco de Dados: \n\t";
+            //msgErro = "Mensagem: Erro ao conectar com o Banco de Dados: \n\t";
+            return false;
         }
         
         //Não será necessário uma mensagem de erro
@@ -146,7 +148,7 @@ public class CadastroEmail {
 //        try{
 //            sqlString = "SELECT p.nome, c.descricao, e.email FROM pessoa as p, categoria as c, email as e WHERE p.id = e.idPessoa AND c.id = e.idCategoria AND p.id = ?";
 //            ps = con.prepareStatement(sqlString);
-//            ps.setInt(1, ID);
+//            ps.setInt(1, IDPessoa);
 //            rs = ps.executeQuery();
 //            rs.first();
 //        } catch (Exception e){
@@ -159,7 +161,7 @@ public class CadastroEmail {
         try {
             sqlString = "SELECT nome FROM pessoa WHERE id = ?";
             ps  = con.prepareStatement(sqlString);
-            ps.setInt(1, ID);
+            ps.setInt(1, IDPessoa);
             rs = ps.executeQuery();
             rs.first();
             return rs.getString(1);
@@ -173,7 +175,7 @@ public class CadastroEmail {
         try {
             sqlString = "SELECT email, id FROM email WHERE idPessoa = ?";
             ps = con.prepareStatement(sqlString);
-            ps.setInt(1, ID);
+            ps.setInt(1, IDPessoa);
             rsEmail = ps.executeQuery();
             rsEmail.first();
             return rsEmail;
@@ -182,16 +184,31 @@ public class CadastroEmail {
         }
     }
     
-    public void Remover(){
+    public String GetEmailString(){
         try {
-            sqlString = "DELETE FROM email WHERE id = ?";
+            sqlString = "SELECT email FROM email WHERE idPessoa = ? AND idCategoria = ?";
             ps = con.prepareStatement(sqlString);
-            ps.setInt(1, IDEmail);
+            ps.setInt(1, IDPessoa);
+            ps.setInt(2, IDCategoria);
             rsEmail = ps.executeQuery();
             rsEmail.first();
-            return rsEmail;
+            return rsEmail.getString(1);
         } catch (Exception e) {
             return null;
+        }
+    }
+    
+    public String Remover(){
+        try {
+            sqlString = "DELETE FROM email WHERE idCategoria = ? AND idPessoa = ?";
+            ps = con.prepareStatement(sqlString);
+            ps.setInt(1, IDCategoria);
+            ps.setInt(2, IDPessoa);
+            ps.executeUpdate();
+            return "Sucesso!";
+
+        } catch (Exception e) {
+            return "Erro: " + e.getMessage();
         }
     }
     
@@ -200,7 +217,7 @@ public class CadastroEmail {
         try {
             sqlString = "SELECT c.id FROM categoria as c, email as e WHERE c.id = e.idCategoria AND e.idPessoa = ?";
             ps = con.prepareStatement(sqlString);
-            ps.setInt(1, ID);
+            ps.setInt(1, IDPessoa);
             rs = ps.executeQuery();
             rs.first();
             return rs.getInt(1);
@@ -213,7 +230,7 @@ public class CadastroEmail {
 //        try {
 //            sqlString = "INSERT INTO email (idPessoa, idCategoria, email) VALUES (?,?,?)";
 //            ps = con.prepareStatement(sqlString);
-//            ps.setInt(1, ID);
+//            ps.setInt(1, IDPessoa);
 //            ps.setInt(2, idCategoria);
 //            ps.setString(3, Email);
 //            ps.executeUpdate();
@@ -235,7 +252,7 @@ public class CadastroEmail {
             try {
                 sqlString = "INSERT INTO email (idPessoa, idCategoria, email) VALUES (?,?,?)";
                 ps = con.prepareStatement(sqlString);
-                ps.setInt(1, ID);
+                ps.setInt(1, IDPessoa);
                 ps.setInt(2, IDCategoria);
                 ps.setString(3, Email);
                 ps.executeUpdate();
@@ -245,12 +262,12 @@ public class CadastroEmail {
             }
         } else {
             try {
-                sqlString = "UPDATE email SET idPessoa = ?, idCategoria = ?, email = ? WHERE id = ?";
+                sqlString = "UPDATE email SET idPessoa = ?, idCategoria = ?, email = ? WHERE idCategoria = ?";
                 ps = con.prepareStatement(sqlString);
-                ps.setInt(1, ID);
+                ps.setInt(1, IDPessoa);
                 ps.setInt(2, IDCategoria);
                 ps.setString(3, Email);
-                ps.setInt(4, IDEmail);
+                ps.setInt(4, IDCategoria);
                 ps.executeUpdate();
                 return  "Sucesso!";
             } catch (Exception e) {
@@ -263,31 +280,31 @@ public class CadastroEmail {
         this.Categoria = Categoria;
     }
     
-    public void SetID(int ID){
-        this.ID = ID;
+    public void SetID(int IDPessoa){
+        this.IDPessoa = IDPessoa;
     }
     
     public void SetNome(String Nome){
         this.Nome = Nome;
     }
     
-    public boolean SetEmail(String Email){
+    public void SetEmail(String Email){
         this.Email = Email;
-        String emailTmp;
+        /*String emailTmp;
         try {
-            rsEmail.first();
-            do {                
-                emailTmp = rs.getString(1);
-                if (emailTmp.equals(Email)) {
-                    NovoValor = false;
-                    break;
-                } else {
-                    NovoValor = true;
-                }
-            } while (rs.next());
+        rsEmail.first();
+        do {
+        emailTmp = rs.getString(1);
+        if (emailTmp.equals(Email)) {
+        NovoValor = false;
+        break;
+        } else {
+        NovoValor = true;
+        }
+        } while (rs.next());
         } catch (Exception e) {
         }
-        return NovoValor;
+        return NovoValor;*/
     }
     
     public void SetIDEmail(int IdEmail){
@@ -296,6 +313,10 @@ public class CadastroEmail {
     
     public void SetIDCategoria(int IDCategoria){
         this.IDCategoria = IDCategoria;
+    }
+    
+    public void SetNovoValor(boolean NovoValor){
+        this.NovoValor = NovoValor;
     }
     
     /* public void SeIDEmail(int IDEmail){
