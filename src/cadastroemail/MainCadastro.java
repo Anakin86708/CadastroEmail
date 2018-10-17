@@ -30,7 +30,7 @@ public class MainCadastro extends javax.swing.JFrame {
     private List<Integer> IdCategoria = new ArrayList();
     private List<Integer> IdEmail = new ArrayList();
     private int IdCategoriaInt;
-    private boolean NovoValor;
+    private boolean NovoValor = false;
     
     //Models
     DefaultListModel modelCategoria = new DefaultListModel();
@@ -110,7 +110,10 @@ public class MainCadastro extends javax.swing.JFrame {
             }
             
             lst_nomes.setModel(modelPessoa);
-        }catch (Exception e) {
+        }
+        catch(ArrayIndexOutOfBoundsException e){
+        }
+        catch (Exception e) {
             ExceptionShow(e);
         }
     }
@@ -122,7 +125,8 @@ public class MainCadastro extends javax.swing.JFrame {
         
         txt_nome.setVisible(visivel);
         cmb_descricao.setVisible(visivel);
-        cmb_email.setVisible(visivel);
+        //cmb_email.setVisible(visivel);
+        txt_email.setVisible(visivel);
         rad_editar.setVisible(visivel);
         
         jSeparator1.setVisible(visivel);
@@ -166,8 +170,8 @@ public class MainCadastro extends javax.swing.JFrame {
         jSeparator3 = new javax.swing.JSeparator();
         btn_gravar = new javax.swing.JButton();
         btn_remover = new javax.swing.JButton();
-        cmb_email = new javax.swing.JComboBox<>();
         rad_editar = new javax.swing.JRadioButton();
+        txt_email = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         lst_categorias = new javax.swing.JList<>();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -229,6 +233,12 @@ public class MainCadastro extends javax.swing.JFrame {
         lbl_campo2.setText("Categoria");
         lbl_campo2.setOpaque(true);
 
+        cmb_descricao.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmb_descricaoItemStateChanged(evt);
+            }
+        });
+
         lbl_campo3.setText("E-Mail");
         lbl_campo3.setOpaque(true);
 
@@ -271,8 +281,8 @@ public class MainCadastro extends javax.swing.JFrame {
                         .addComponent(cmb_descricao, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lbl_campo3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 55, Short.MAX_VALUE)
-                        .addComponent(cmb_email, javax.swing.GroupLayout.PREFERRED_SIZE, 264, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lbl_campo1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -301,10 +311,10 @@ public class MainCadastro extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lbl_campo3)
-                    .addComponent(cmb_email, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(12, 12, 12)
+                    .addComponent(txt_email, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(19, 19, 19)
                 .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -395,17 +405,20 @@ public class MainCadastro extends javax.swing.JFrame {
             //modelCategoriaComboBox = (ComboBoxModel<String>) modelCategoria;
             //cmb_descricao.setModel(modelCategoriaComboBox);
             cmb_descricao.setSelectedIndex(index);
-            cmb_email.removeAllItems();
+            //cmb_email.removeAllItems();
             IdEmail.clear();
             resultSet = db.GetEmailRS();
-            do {                
-                cmb_email.addItem(resultSet.getString(1));
-                IdEmail.add(resultSet.getInt(2));
-            } while (resultSet.next());
+            /*do {
+            cmb_email.addItem(resultSet.getString(1));
+            IdEmail.add(resultSet.getInt(2));
+            } while (resultSet.next());*/
+            txt_email.setText(resultSet.getString(1));
             ExibirBotoes(true);
         } catch (SQLException e) {
             ExibirBotoes(true);
-            cmb_email.removeAllItems();
+            //cmb_email.removeAllItems();
+        }catch(ArrayIndexOutOfBoundsException e){
+            ExibirBotoes(false);
         }
         catch (Exception e){
             ExceptionShow(e);
@@ -422,33 +435,47 @@ public class MainCadastro extends javax.swing.JFrame {
 
     private void btn_gravarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_gravarActionPerformed
         db.SetNome(txt_nome.getText());
-        db.SetEmail(cmb_email.getSelectedItem().toString());
+        //db.SetEmail(cmb_email.getSelectedItem().toString());
+        db.SetEmail(txt_email.getText());
         IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex()-1); 
         db.SetIDCategoria(IdCategoriaInt);  
-        if (NovoValor) {
-            cmb_email.setEditable(false);
-            int indexEmail = cmb_email.getSelectedIndex();
-            db.SetIDEmail(IdEmail.get(indexEmail));
-        }
+        /*if (NovoValor) {
+        cmb_email.setEditable(false);
+        int indexEmail = cmb_email.getSelectedIndex();
+        db.SetIDEmail(IdEmail.get(indexEmail));
+        }*/
+
         String msg = db.AlterarValorCadastro();
-        cmb_email.setEditable(true);
+        //cmb_email.setEditable(true);
         MessageShow(msg);
 
     }//GEN-LAST:event_btn_gravarActionPerformed
 
     private void btn_removerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_removerActionPerformed
-        if (JOptionPane.showConfirmDialog(this,"Deseja realmente remover este contato?", "Remover Permanentemente",DISPOSE_ON_CLOSE) == 0){
-            int indexEmail = cmb_email.getSelectedIndex();
-            db.SetIDEmail(IdEmail.get(indexEmail));
-            db.Remover();
+        int dialog = JOptionPane.showConfirmDialog(this,"Deseja realmente remover este contato?", "Remover Permanentemente",DISPOSE_ON_CLOSE);
+        if (dialog == JOptionPane.YES_OPTION){
+            IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex()-1); 
+            db.SetIDCategoria(IdCategoriaInt);  
+            MessageShow(db.Remover());
+            cmb_descricao.setSelectedIndex(1);
         }
     }//GEN-LAST:event_btn_removerActionPerformed
 
     private void rad_editarStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rad_editarStateChanged
         NovoValor = rad_editar.isSelected();
-        db.SetNovoValor(NovoValor);
-        cmb_email.setEditable(NovoValor);
+        db.SetNovoValor(!NovoValor);
+        //cmb_email.setEditable(NovoValor);
     }//GEN-LAST:event_rad_editarStateChanged
+
+    private void cmb_descricaoItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmb_descricaoItemStateChanged
+        try {
+            IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex() - 1);
+            db.SetIDCategoria(IdCategoriaInt);
+            txt_email.setText(db.GetEmailString());
+            db.SetEmail(txt_email.getText());
+        } catch (Exception e) {
+        }
+    }//GEN-LAST:event_cmb_descricaoItemStateChanged
 
     /**
      * @param args the command line arguments
@@ -491,7 +518,6 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JButton btn_gravar;
     private javax.swing.JButton btn_remover;
     private javax.swing.JComboBox<String> cmb_descricao;
-    private javax.swing.JComboBox<String> cmb_email;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -506,6 +532,7 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JList<String> lst_nomes;
     private javax.swing.JPanel panelTop;
     private javax.swing.JRadioButton rad_editar;
+    private javax.swing.JTextField txt_email;
     private javax.swing.JTextField txt_nome;
     // End of variables declaration//GEN-END:variables
 }
