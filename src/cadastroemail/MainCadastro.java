@@ -34,7 +34,6 @@ public class MainCadastro extends javax.swing.JFrame {
     
     //Models
     DefaultListModel modelCategoria = new DefaultListModel();
-    DefaultListModel modelPessoa = new DefaultListModel();
     
     ComboBoxModel<String> modelCategoriaComboBox;
     ComboBoxModel<String> modelEmailComboBox;
@@ -44,13 +43,14 @@ public class MainCadastro extends javax.swing.JFrame {
         initComponents();
         
         
-        db.SetConexao();
+        if (!db.SetConexao()){
+            MessageShow("Falha ao conectar ao banco de dados!");
+        } else {
         db.SetCategoria(Categoria);
         
         ExibirCategorias();
         //ExibirPessoas();
         ExibirBotoes(false);
-        cmb_email.setEditable(true);
         //cmb_email.setSelectedIndex(0);
         
         /*TODO List:
@@ -64,8 +64,11 @@ public class MainCadastro extends javax.swing.JFrame {
         * Verificar se Categoria não é nula antes de inserir
         * 
         * Mostrar pessoas com mais de um email, mesmo que em mesma categoria - talvez utilizando JOIN
+        *
+        * Mensagem quando o DB não estiver ligado
+        * Cadastro de pessoas em cada categoria não está exibindo corretamente
         */
-       
+        }
     }
     
     private void ExibirCategorias(){
@@ -89,25 +92,25 @@ public class MainCadastro extends javax.swing.JFrame {
     }
     
     private void ExibirPessoas(){
+        DefaultListModel modelPessoa = new DefaultListModel();
         try {
-            resultSet = db.GetPessoasRS();
+                resultSet = db.GetPessoasRS();
             if (resultSet == null){
                 MessageShow("Categoria vazia!");
             } else{
                 lst_nomes.removeAll();
                 resultSet.first();
+                //modelPessoa.clear();
+                int i = 0;
                 do {                
-                    modelPessoa.addElement(resultSet.getString(1));
+                    modelPessoa.add(i,resultSet.getString(1));
                     IdPessoa.add(resultSet.getInt(2));
+                    i++;
                 } while (resultSet.next());
             }
             
             lst_nomes.setModel(modelPessoa);
-        }catch(ArrayIndexOutOfBoundsException e){
-            modelPessoa.add(0, "");
-            ExibirPessoas();
-        } 
-        catch (Exception e) {
+        }catch (Exception e) {
             ExceptionShow(e);
         }
     }
@@ -120,6 +123,7 @@ public class MainCadastro extends javax.swing.JFrame {
         txt_nome.setVisible(visivel);
         cmb_descricao.setVisible(visivel);
         cmb_email.setVisible(visivel);
+        rad_editar.setVisible(visivel);
         
         jSeparator1.setVisible(visivel);
         jSeparator2.setVisible(visivel);
@@ -163,6 +167,7 @@ public class MainCadastro extends javax.swing.JFrame {
         btn_gravar = new javax.swing.JButton();
         btn_remover = new javax.swing.JButton();
         cmb_email = new javax.swing.JComboBox<>();
+        rad_editar = new javax.swing.JRadioButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         lst_categorias = new javax.swing.JList<>();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -243,6 +248,13 @@ public class MainCadastro extends javax.swing.JFrame {
             }
         });
 
+        rad_editar.setText("Editar");
+        rad_editar.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                rad_editarStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -259,16 +271,17 @@ public class MainCadastro extends javax.swing.JFrame {
                         .addComponent(cmb_descricao, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lbl_campo3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 55, Short.MAX_VALUE)
                         .addComponent(cmb_email, javax.swing.GroupLayout.PREFERRED_SIZE, 264, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lbl_campo1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(txt_nome, javax.swing.GroupLayout.PREFERRED_SIZE, 265, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(btn_gravar)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(rad_editar, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btn_remover)))
                 .addContainerGap())
         );
@@ -296,7 +309,8 @@ public class MainCadastro extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btn_gravar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btn_remover, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(rad_editar))
                 .addGap(329, 329, 329))
         );
 
@@ -403,23 +417,21 @@ public class MainCadastro extends javax.swing.JFrame {
         ExibirBotoes(false);
         Categoria = lst_categorias.getSelectedValue();
         db.SetCategoria(Categoria);
-        try {
-            modelPessoa.removeAllElements();
-        } catch (Exception e) {
-        }
         ExibirPessoas();
     }//GEN-LAST:event_lst_categoriasValueChanged
 
     private void btn_gravarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_gravarActionPerformed
         db.SetNome(txt_nome.getText());
-        NovoValor = db.SetEmail(cmb_email.getSelectedItem().toString());
+        db.SetEmail(cmb_email.getSelectedItem().toString());
         IdCategoriaInt = IdCategoria.get(cmb_descricao.getSelectedIndex()-1); 
-        db.SetIDCategoria(IdCategoriaInt);
-        if (!NovoValor) {
+        db.SetIDCategoria(IdCategoriaInt);  
+        if (NovoValor) {
+            cmb_email.setEditable(false);
             int indexEmail = cmb_email.getSelectedIndex();
             db.SetIDEmail(IdEmail.get(indexEmail));
         }
         String msg = db.AlterarValorCadastro();
+        cmb_email.setEditable(true);
         MessageShow(msg);
 
     }//GEN-LAST:event_btn_gravarActionPerformed
@@ -431,6 +443,12 @@ public class MainCadastro extends javax.swing.JFrame {
             db.Remover();
         }
     }//GEN-LAST:event_btn_removerActionPerformed
+
+    private void rad_editarStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rad_editarStateChanged
+        NovoValor = rad_editar.isSelected();
+        db.SetNovoValor(NovoValor);
+        cmb_email.setEditable(NovoValor);
+    }//GEN-LAST:event_rad_editarStateChanged
 
     /**
      * @param args the command line arguments
@@ -487,6 +505,7 @@ public class MainCadastro extends javax.swing.JFrame {
     private javax.swing.JList<String> lst_categorias;
     private javax.swing.JList<String> lst_nomes;
     private javax.swing.JPanel panelTop;
+    private javax.swing.JRadioButton rad_editar;
     private javax.swing.JTextField txt_nome;
     // End of variables declaration//GEN-END:variables
 }

@@ -143,18 +143,19 @@
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="lbl_campo3" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace pref="55" max="32767" attributes="0"/>
                           <Component id="cmb_email" min="-2" pref="264" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="lbl_campo1" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="41" max="32767" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
                           <Component id="txt_nome" min="-2" pref="265" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           <Component id="btn_gravar" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="rad_editar" min="-2" pref="113" max="-2" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
                           <Component id="btn_remover" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -190,6 +191,7 @@
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="btn_gravar" alignment="3" min="-2" pref="25" max="-2" attributes="0"/>
                       <Component id="btn_remover" alignment="3" min="-2" pref="25" max="-2" attributes="0"/>
+                      <Component id="rad_editar" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="329" max="-2" attributes="0"/>
               </Group>
@@ -264,6 +266,14 @@
           <AuxValues>
             <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
           </AuxValues>
+        </Component>
+        <Component class="javax.swing.JRadioButton" name="rad_editar">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Editar"/>
+          </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="rad_editarStateChanged"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
