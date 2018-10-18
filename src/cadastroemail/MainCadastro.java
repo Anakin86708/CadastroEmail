@@ -398,6 +398,7 @@ public class MainCadastro extends javax.swing.JFrame {
         int id = IdPessoa.get(lst_nomes.getSelectedIndex());
         int index = db.GetCategoriaInteger();
         db.SetID(id);
+        txt_email.setText("");
         
         try {
             String nome = db.GetNomeString();
@@ -419,6 +420,9 @@ public class MainCadastro extends javax.swing.JFrame {
             //cmb_email.removeAllItems();
         }catch(ArrayIndexOutOfBoundsException e){
             ExibirBotoes(false);
+        }
+        catch(IllegalArgumentException e){
+            ExibirBotoes(true);
         }
         catch (Exception e){
             ExceptionShow(e);
